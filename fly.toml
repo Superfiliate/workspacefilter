@@ -11,7 +11,7 @@ kill_signal = 'SIGTERM'
 
 [env]
   DATABASE_PATH = '/mnt/name/name.db'
-  PHX_HOST = 'workspacefilter.fly.dev'
+  PHX_HOST = 'workspacefilter.com'
   PORT = '8080'
 
 [[mounts]]
