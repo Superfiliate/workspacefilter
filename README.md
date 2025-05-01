@@ -1,24 +1,32 @@
-# Elixir/Phoenix Dev Container
+# Workspacefilter
 
-This project includes a Development Container configuration to provide a consistent and isolated Elixir/Phoenix development environment without needing to install Elixir or its dependencies directly on your host machine.
+## Pre-requisites
 
-## Prerequisites
+- Have Docker or Orbstack installed and running.
+- Have an VSCode-like editor, to use the `.devcontainer`
+  - Make sure you also have the "Dev Containers" extension installed.
 
-* Orbstack
-* VSCode-based editor (Cursor, Windsurf, ...)
-  * Make sure the "Dev Containers" externsion is also installed.
+## Developing
 
-## Getting Started
+- Open your editor, and it should prompt you if you want to use the `.devcontainer`, accept that.
+- All dependencies should be automatically setup for you.
+- Run the server with `make dev`
 
-1.  Clone this repository (or ensure you have the `.devcontainer` folder in your project root).
-2.  Open the project folder in VS Code or Cursor.
-3.  When prompted, click on "Reopen in Container". Alternatively, open the Command Palette (`Cmd+Shift+P` or `Ctrl+Shift+P`) and select "Dev Containers: Reopen in Container".
-4.  VS Code will build the container image (this might take a few minutes the first time) and start the development environment.
+## Official instructions
 
-## Accessing the Phoenix Server
+To start your Phoenix server:
 
-When you run your Phoenix server inside the container (typically with `mix phx.server`), it will be available on port 4000.
+  * Run `mix setup` to install and setup dependencies
+  * Start Phoenix endpoint with `mix phx.server` or inside IEx with `iex -S mix phx.server`
 
-You can access it from your local machine's browser at:
+Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
 
-[http://localhost:4000](http://localhost:4000)
+Ready to run in production? Please [check our deployment guides](https://hexdocs.pm/phoenix/deployment.html).
+
+## Learn more
+
+  * Official website: https://www.phoenixframework.org/
+  * Guides: https://hexdocs.pm/phoenix/overview.html
+  * Docs: https://hexdocs.pm/phoenix
+  * Forum: https://elixirforum.com/c/phoenix-forum
+  * Source: https://github.com/phoenixframework/phoenix

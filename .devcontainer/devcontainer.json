@@ -10,7 +10,7 @@
 	"forwardPorts": [4000],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "mix local.hex --force && mix local.rebar --force",
+	"postCreateCommand": "make setup && make dev",
 
 	// Configure tool-specific properties.
 	"customizations": {
