@@ -25,7 +25,8 @@
 				"phoenixframework.phoenix",
 				"pantajoe.vscode-elixir-credo",
 				"ms-vscode.makefile-tools",
-				"bradlc.vscode-tailwindcss"
+				"bradlc.vscode-tailwindcss",
+				"ms-azuretools.vscode-docker"
 			]
 		}
 	}
