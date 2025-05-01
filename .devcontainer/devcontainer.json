@@ -10,7 +10,7 @@
 	"forwardPorts": [4000],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "make setup && make dev",
+	"postCreateCommand": "make setup && echo 'run \"make dev\" to start the server'",
 
 	// Configure tool-specific properties.
 	"customizations": {
