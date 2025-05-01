@@ -1,100 +1,70 @@
+# --- Builder Stage ---
 FROM elixir:1.18-otp-27 as builder
 
-# install build dependencies
-RUN apt-get update -y && apt-get install -y build-essential wget wget git \
+# Install build dependencies
+RUN apt-get update -y && apt-get install -y build-essential wget git \
     && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
-# Install litestream
+# Install litestream for SQLite replication
 ARG LITESTREAM_VERSION=0.3.13
 RUN wget https://github.com/benbjohnson/litestream/releases/download/v${LITESTREAM_VERSION}/litestream-v${LITESTREAM_VERSION}-linux-amd64.deb \
-    && dpkg -i litestream-v${LITESTREAM_VERSION}-linux-amd64.deb
+    && dpkg -i litestream-v${LITESTREAM_VERSION}-linux-amd64.deb \
+    && rm litestream-v${LITESTREAM_VERSION}-linux-amd64.deb # Clean up downloaded deb
 
-# Install litestream
-ARG LITESTREAM_VERSION=0.3.13
-RUN wget https://github.com/benbjohnson/litestream/releases/download/v${LITESTREAM_VERSION}/litestream-v${LITESTREAM_VERSION}-linux-amd64.deb \
-    && dpkg -i litestream-v${LITESTREAM_VERSION}-linux-amd64.deb
-
-# prepare build dir
 WORKDIR /app
 
-# install hex + rebar
 RUN mix local.hex --force && \
     mix local.rebar --force
 
-# set build ENV
 ENV MIX_ENV="prod"
 
-# install mix dependencies
+# Install mix dependencies first to leverage Docker cache
 COPY mix.exs mix.lock ./
 RUN mix deps.get --only $MIX_ENV
 RUN mkdir config
 
-# copy compile-time config files before we compile dependencies
-# to ensure any relevant config change will trigger the dependencies
-# to be re-compiled.
 COPY config/config.exs config/${MIX_ENV}.exs config/
 RUN mix deps.compile
 
 COPY priv priv
-
 COPY lib lib
-
 COPY assets assets
 
-# compile assets
 RUN mix assets.deploy
 
-# Compile the release
 RUN mix compile
 
-# Changes to config/runtime.exs don't require recompiling the code
 COPY config/runtime.exs config/
-
 COPY rel rel
 RUN mix release
 
-# start a new build stage so that the final image will only contain
-# the compiled release and other runtime necessities
+# --- Runner Stage ---
 FROM elixir:1.18-otp-27
 
+# Install runtime dependencies
 RUN apt-get update -y && \
-  apt-get install -y libstdc++6 openssl libncurses5 locales ca-certificates \
-  && apt-get clean && rm -f /var/lib/apt/lists/*_*
+  apt-get install -y --no-install-recommends libstdc++6 openssl libncurses5 locales ca-certificates \
+  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Set the locale
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
-
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 
 WORKDIR "/app"
-RUN chown nobody /app
 
-# set runner ENV
 ENV MIX_ENV="prod"
 
-# Only copy the final release from the build stage
-COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/workspacefilter ./
+# Copy only the compiled release from the builder stage
+COPY --from=builder /app/_build/${MIX_ENV}/rel/workspacefilter ./
 
-# Copy Litestream binary from build stage
+# Copy Litestream binary and configuration from builder stage
 COPY --from=builder /usr/bin/litestream /usr/bin/litestream
 COPY litestream.sh /app/bin/litestream.sh
 COPY config/litestream.yml /etc/litestream.yml
 
-# Copy Litestream binary from build stage
-COPY --from=builder /usr/bin/litestream /usr/bin/litestream
-COPY litestream.sh /app/bin/litestream.sh
-COPY config/litestream.yml /etc/litestream.yml
-
-USER nobody
-
-# If using an environment that doesn't automatically reap zombie processes, it is
-# advised to add an init process such as tini via `apt-get install`
-# above and adding an entrypoint. See https://github.com/krallin/tini for details
-# ENTRYPOINT ["/tini", "--"]
-
-# Run litestream script as entrypoint
+# Entrypoint script handles Litestream setup and starting the server
 ENTRYPOINT ["/bin/bash", "/app/bin/litestream.sh"]
 
-CMD ["/bin/bash", "/app/bin/litestream.sh","/app/bin/server"]
+# Default command passed to the entrypoint script
+CMD ["/app/bin/server"]
